@@ -73,8 +73,8 @@ void setup() {
   // This example will not run if you haven't
   // previously started "ThinkGear connector" server
   myBrainwave = new Client(this, "127.0.0.1", 13854);
-  //initialize brainwave with raw data enabled, JSON format
-  myBrainwave.write("{\"enableRawOutput\": true, \"format\": \"Json\"}");
+  //initialize brainwave with raw data disabled, JSON format
+  myBrainwave.write("{\"enableRawOutput\": false, \"format\": \"Json\"}");
   
 }
  
@@ -95,33 +95,23 @@ void draw() {
  try{
     //parse JSON object from dataIn string
     JSONObject nytData = new JSONObject(dataIn);
+    
     //parse individual datasets from main JSON object
     JSONObject results = nytData.getJSONObject("eegPower");
     JSONObject resultsM = nytData.getJSONObject("eSense");
-    JSONObject rawData = nytData.getJSONObject("rawEeg");
+    //JSONObject rawData = nytData.getJSONObject("rawEeg");
     //JSONObject resultsB = nytData.getJSONObject("blinkStrength");
-    if(DynamicRange){
-      
-      int delta = results.getInt("delta");
-      int theta = results.getInt("theta");
-      int lowAlpha = results.getInt("lowAlpha");
-      int highAlpha = results.getInt("highAlpha");
-      int lowBeta = results.getInt("lowBeta");
-      int highBeta = results.getInt("highBeta");
-      int lowGamma = results.getInt("lowGamma");
-      int highGamma = results.getInt("highGamma");
-
-    }else{
-      int delta = results.getInt("delta");
-      int theta = results.getInt("theta");
-      int lowAlpha = results.getInt("lowAlpha");
-      int highAlpha = results.getInt("highAlpha");
-      int lowBeta = results.getInt("lowBeta");
-      int highBeta = results.getInt("highBeta");
-      int lowGamma = results.getInt("lowGamma");
-      int highGamma = results.getInt("highGamma");
     
-    }
+    //pull individual values from eSense and eegPower JSON objects
+    int delta = results.getInt("delta");
+    int theta = results.getInt("theta");
+    int lowAlpha = results.getInt("lowAlpha");
+    int highAlpha = results.getInt("highAlpha");
+    int lowBeta = results.getInt("lowBeta");
+    int highBeta = results.getInt("highBeta");
+    int lowGamma = results.getInt("lowGamma");
+    int highGamma = results.getInt("highGamma");
+    
     int attention = resultsM.getInt("attention");
     int meditation = resultsM.getInt("meditation");
 
@@ -169,15 +159,5 @@ void DebugMode(boolean theFlag) {
   } else {
     Debug = false;
     println("DEBUG TOGGLE OFF.");
-  }
-}
-
-void DynamicRangeMode(boolean theFlag) {
-  if(theFlag==true) {
-    DynamicRange = true;
-    println("DYNAMIC RANGE TOGGLE ON.");
-  } else {
-    DynamicRange = false;
-    println("DYNAMIC RANGE TOGGLE OFF.");
   }
 }
