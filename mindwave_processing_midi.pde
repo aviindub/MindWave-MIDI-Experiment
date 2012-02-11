@@ -38,10 +38,13 @@ import processing.net.*;
 // I am assuming here that you are using the Processing 1.0 release or higher. Libraries are added to your processing sketchbook folder (~user/Documents/Processing on a Mac) in a directory called ‘libraries’.
 //If it doesn’t already exist, create it, and drop the unzipped ‘json’ folder inside)
 import org.json.*;
-//
+
 Client myBrainwave;
 MidiBus midiBus;
-
+int fps, i;
+int data, oldData, newData;
+int[] intPoints;
+float floatPoint;
 
 Boolean Debug = true;
 Boolean DynamicRange = false;
@@ -63,8 +66,11 @@ int time1, time2, loopCounter;
 String dataIn;
 
 void setup() {
-  frameRate(60);
-
+  
+  fps = 60;
+  frameRate(fps);
+  intPoints = new int[fps];
+  
   //initialize MidiBus with no input, and LoopBe as output
   midiBus = new MidiBus(this, -1, "LoopBe Internal MIDI");
 
@@ -91,10 +97,12 @@ void draw() {
   }
 
   if (myBrainwave.available() > 0) {
+    
     dataIn = myBrainwave.readString();
+    
     if (Debug) {
-    //made it to dataIn
-    println(dataIn);
+      //made it to dataIn
+      println(dataIn);
     }
     try {
       //parse JSON object from dataIn string
@@ -119,9 +127,23 @@ void draw() {
       //this is the eSense stuff
       int attention = resultsM.getInt("attention");
       int meditation = resultsM.getInt("meditation");
+      
+      newData = attention;
+      
+      //check if we actually got new data
+      if (newData != data) {
+        //save new data and recalc interpolation points
+        data = newData;
+        recalculatePoints(intPoints[i], data);
+        i = 0;
+      } else {
+        //SEND MIDI CONTRTOL
+        midiBus.sendControllerChange(intPoints[i]);
+        i++;
+      }
+      
+      
 
-      //SEND MIDI CONTRTOL
-      midiBus.sendControllerChange(0, 3, attention);
     } 
     catch (JSONException e) {
       if (Debug) {
@@ -129,6 +151,14 @@ void draw() {
         println(e);
       }
     }
+  }
+}
+
+void recalculatePoints () {
+  float increment = ((float) data - oldData) / fps;
+  for int (int ii = 0, ii < fps; ii++) {
+    float pointFloat = (oldData + (increment * ii);
+    points[ii] = (int) pointFloat;
   }
 }
 
