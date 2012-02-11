@@ -66,11 +66,11 @@ int time1, time2, loopCounter;
 String dataIn;
 
 void setup() {
-  
+
   fps = 60;
   frameRate(fps);
   intPoints = new int[fps];
-  
+
   //initialize MidiBus with no input, and LoopBe as output
   midiBus = new MidiBus(this, -1, "LoopBe Internal MIDI");
 
@@ -93,72 +93,75 @@ void draw() {
   if (Debug) {
     //should print on each iteration of loop regardless of dataIn
     println("loop time: " + time2 + "  loop number " + loopCounter);
-    println(dataIn);
   }
 
   if (myBrainwave.available() > 0) {
-    
+
     dataIn = myBrainwave.readString();
-    
+
     if (Debug) {
       //made it to dataIn
       println(dataIn);
-    }
-    try {
-      //parse JSON object from dataIn string
-      JSONObject nytData = new JSONObject(dataIn);
 
-      //parse individual datasets from main JSON object
-      JSONObject results = nytData.getJSONObject("eegPower");
-      JSONObject resultsM = nytData.getJSONObject("eSense");
-      //JSONObject rawData = nytData.getJSONObject("rawEeg");
-      //JSONObject resultsB = nytData.getJSONObject("blinkStrength");
+      try {
+        //parse JSON object from dataIn string
+        JSONObject nytData = new JSONObject(dataIn);
 
-      //pull individual values from eSense and eegPower JSON objects
-      //this is the eegPower stuff
-      int delta = results.getInt("delta");
-      int theta = results.getInt("theta");
-      int lowAlpha = results.getInt("lowAlpha");
-      int highAlpha = results.getInt("highAlpha");
-      int lowBeta = results.getInt("lowBeta");
-      int highBeta = results.getInt("highBeta");
-      int lowGamma = results.getInt("lowGamma");
-      int highGamma = results.getInt("highGamma");
-      //this is the eSense stuff
-      int attention = resultsM.getInt("attention");
-      int meditation = resultsM.getInt("meditation");
-      
-      newData = attention;
-      
-      //check if we actually got new data
-      if (newData != data) {
-        //save new data and recalc interpolation points
-        data = newData;
-        recalculatePoints(intPoints[i], data);
-        i = 0;
-      } else {
-        //SEND MIDI CONTRTOL
-        midiBus.sendControllerChange(0, 3, intPoints[i]);
-        println("sent midi control " + i);
-        i++;
-        if (i >= fps) {
-          i = fps - 1;
+        //parse individual datasets from main JSON object
+        JSONObject results = nytData.getJSONObject("eegPower"); //eegPower dataset
+
+          JSONObject resultsM = nytData.getJSONObject("eSense"); //eSense dataset
+
+          //JSONObject rawData = nytData.getJSONObject("rawEeg");
+        //JSONObject resultsB = nytData.getJSONObject("blinkStrength");
+
+        //pull individual values from eSense and eegPower JSON objects
+        //this is the eegPower stuff
+        int delta = results.getInt("delta");
+        int theta = results.getInt("theta");
+        int lowAlpha = results.getInt("lowAlpha");
+        int highAlpha = results.getInt("highAlpha");
+        int lowBeta = results.getInt("lowBeta");
+        int highBeta = results.getInt("highBeta");
+        int lowGamma = results.getInt("lowGamma");
+        int highGamma = results.getInt("highGamma");
+        //this is the eSense stuff
+        int attention = resultsM.getInt("attention");
+        int meditation = resultsM.getInt("meditation");
+
+        newData = attention;
+        println("data = " + data + " newData = " + newData);
+      } 
+      catch (JSONException e) {
+        if (Debug) {
+          println ("There was an error parsing the JSONObject.");
+          println(e);
         }
       }
-      
-      
-
-    } 
-    catch (JSONException e) {
-      if (Debug) {
-        println ("There was an error parsing the JSONObject.");
-        println(e);
-      }
+    }
+  }
+  if (newData != data) { //check if we actually got new data
+    //save new data and recalc interpolation points
+    data = newData;
+    recalculatePoints(intPoints[i], data);
+    if (Debug) println("recalculated points");
+    i = 0;
+  } 
+  else {
+    //SEND MIDI CONTRTOL
+    midiBus.sendControllerChange(0, 3, intPoints[i]);
+    if (Debug) println("sent midi control " + intPoints[i] + " i = " + i);
+    i++;
+    if (i >= fps) { //make sure i doesnt go out of bounds for intPoints[] if no update in >1sec
+      i = fps - 1;
     }
   }
 }
 
 void recalculatePoints (int oldData, int data) {
+  //recalculates the array of interpolation points 
+  //based on current position and new target position
+
   float increment = ((float) data - oldData) / fps;
   for (int ii = 0; ii < fps; ii++) {
     float pointFloat = (oldData + (increment * ii));
