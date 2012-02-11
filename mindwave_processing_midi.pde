@@ -139,7 +139,11 @@ void draw() {
       } else {
         //SEND MIDI CONTRTOL
         midiBus.sendControllerChange(0, 3, intPoints[i]);
+        println("sent midi control " + i);
         i++;
+        if (i >= fps) {
+          i = fps - 1;
+        }
       }
       
       
