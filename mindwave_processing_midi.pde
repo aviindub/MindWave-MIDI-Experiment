@@ -138,7 +138,7 @@ void draw() {
         i = 0;
       } else {
         //SEND MIDI CONTRTOL
-        midiBus.sendControllerChange(intPoints[i]);
+        midiBus.sendControllerChange(0, 3, intPoints[i]);
         i++;
       }
       
@@ -154,11 +154,11 @@ void draw() {
   }
 }
 
-void recalculatePoints () {
+void recalculatePoints (int oldData, int data) {
   float increment = ((float) data - oldData) / fps;
-  for int (int ii = 0, ii < fps; ii++) {
-    float pointFloat = (oldData + (increment * ii);
-    points[ii] = (int) pointFloat;
+  for (int ii = 0; ii < fps; ii++) {
+    float pointFloat = (oldData + (increment * ii));
+    intPoints[ii] = (int) pointFloat;
   }
 }
 
