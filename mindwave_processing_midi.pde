@@ -26,9 +26,10 @@
  | |
  | LIBRARIES |
  | JSON Processing Library. | http://www.blprnt.com/processing/json.zip |
- | an alternative library |
- | https://github.com/agoransson/JSON-processing |
- | |
+ | an alternative library | https://github.com/agoransson/JSON-processing |
+ |  |
+ | MIDIBus library: http://smallbutdigital.com/themidibus.php|
+ | LoopBe internal MIDI port: http://nerds.de/en/loopbe1.html |
  +------------------------------------------------------------------------------------+
  */
 
