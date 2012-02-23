@@ -67,7 +67,7 @@ int time1, time2, loopCounter;
 String dataIn;
 
 void setup() {
-
+  size(300, 100);
   fps = 60;
   frameRate(fps);
   intPoints = new int[fps];
@@ -111,9 +111,9 @@ void draw() {
         //parse individual datasets from main JSON object
         JSONObject results = nytData.getJSONObject("eegPower"); //eegPower dataset
 
-          JSONObject resultsM = nytData.getJSONObject("eSense"); //eSense dataset
+        JSONObject resultsM = nytData.getJSONObject("eSense"); //eSense dataset
 
-          //JSONObject rawData = nytData.getJSONObject("rawEeg");
+        //JSONObject rawData = nytData.getJSONObject("rawEeg");
         //JSONObject resultsB = nytData.getJSONObject("blinkStrength");
 
         //pull individual values from eSense and eegPower JSON objects
@@ -130,7 +130,8 @@ void draw() {
         int attention = resultsM.getInt("attention");
         int meditation = resultsM.getInt("meditation");
 
-        newData = attention;
+        //newData = attention;
+        newData = (int) map(attention, 0, 70, 1, 99);
         println("data = " + data + " newData = " + newData);
       } 
       catch (JSONException e) {
@@ -144,6 +145,7 @@ void draw() {
   if (newData != data) { //check if we actually got new data
     //save new data and recalc interpolation points
     data = newData;
+    
     recalculatePoints(intPoints[i], data);
     if (Debug) println("recalculated points");
     i = 0;
@@ -156,6 +158,14 @@ void draw() {
     if (i >= fps) { //make sure i doesnt go out of bounds for intPoints[] if no update in >1sec
       i = fps - 1;
     }
+    //draw pointer thing
+    fill(0);
+    rect(20, 40, 260, 5);
+    fill(130);
+    rect(15, 27, 5, 30);
+    rect(280, 27, 5, 30);
+    int cursorPos = (int) map(intPoints[i], 1, 99, 22, 275);
+    rect(cursorPos, 27, 5, 30);
   }
 }
 
