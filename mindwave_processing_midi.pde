@@ -40,33 +40,36 @@ import processing.net.*;
 //If it doesn’t already exist, create it, and drop the unzipped ‘json’ folder inside)
 import org.json.*;
 
-Client myBrainwave;
-MidiBus midiBus;
-int fps, i;
+Client myBrainwave; //JSON client
+MidiBus midiBus; //MidiBus
+PrintWriter output; //output file
+int fps, i, lastHit; 
 int data, oldData, newData;
-int[] intPoints;
+int[] intPoints; //interpolated points for the next second
 float floatPoint;
+color COLOR_GREEN = color(0,200,0);
+color COLOR_RED = color(200,0,0);
+color highColor = COLOR_GREEN; //initialize colors of ends
+color lowColor = COLOR_RED;
+String dataIn; //string for data from thinkgear driver
+
 
 Boolean Debug = true;
-Boolean DynamicRange = false;
 
-//setting global variables to make range of slider dynamically based on input range if wanted
-//set here your maxvalue for sliders
-int Max1 = 0;
-int Max2 = 0;
-int Max3 = 0;
-int Max4 = 0;
-int Max5 = 0;
-int Max6 = 0;
-int Max7 = 0;
-int Max8 = 0;
+
+int HIGH_THRESH = 96;
+int LOW_THRESH = 4;
+boolean LOW = false;
+boolean HIGH = true;
+boolean lastSwitch = false;
 
 int time1, time2, loopCounter;
 
-//strings 4 data in
-String dataIn;
-
 void setup() {
+  
+  String outputFileName = "output_" + month() +"_"+ day() +"_"+ year() +"_"+ hour()+minute() +".txt";
+  output = createWriter(outputFileName); 
+  
   size(300, 100);
   fps = 60;
   frameRate(fps);
@@ -76,8 +79,7 @@ void setup() {
   midiBus = new MidiBus(this, -1, "LoopBe Internal MIDI");
 
   // Connect to the local machine at port 13854.
-  //we use socket connection.
-  // This example will not run if you haven't
+  // This will not run if you haven't
   // previously started "ThinkGear connector" server
   myBrainwave = new Client(this, "127.0.0.1", 13854);
   //initialize brainwave with raw data disabled, JSON format
@@ -158,14 +160,34 @@ void draw() {
     if (i >= fps) { //make sure i doesnt go out of bounds for intPoints[] if no update in >1sec
       i = fps - 1;
     }
-    //draw pointer thing
+    //draw cursor and track thing
     fill(0);
     rect(20, 40, 260, 5);
-    fill(130);
-    rect(15, 27, 5, 30);
-    rect(280, 27, 5, 30);
     int cursorPos = (int) map(intPoints[i], 1, 99, 22, 275);
     rect(cursorPos, 27, 5, 30);
+    
+    //switch colors if just passed a threshold
+    if (intPoints[i] <= LOW_THRESH && lastSwitch == HIGH) {
+      switchColors();
+      lastSwitch = LOW;
+      //LOG THE SWITCH
+      int lapTime = millis() - lastHit;
+      output.println("Low Hit:" + millis() +":"+ lapTime);
+      lastHit = millis();
+    }
+    else if (intPoints[i] >= HIGH_THRESH && lastSwitch == LOW) {
+      switchColors();
+      lastSwitch = HIGH;
+      //LOG THE SWITCH
+      int lapTime = millis() - lastHit;
+      output.println("High Hit:" + millis() +":"+ lapTime);
+      lastHit = millis();
+    }
+
+    fill(lowColor);
+    rect(15, 27, 5, 30);
+    fill(highColor);
+    rect(280, 27, 5, 30);
   }
 }
 
@@ -180,6 +202,18 @@ void recalculatePoints (int oldData, int data) {
   }
 }
 
+void switchColors() {
+  if (highColor == COLOR_GREEN) {
+    highColor = COLOR_RED;
+    lowColor = COLOR_GREEN;
+  }
+  else {
+    highColor = COLOR_GREEN;
+    lowColor = COLOR_RED;
+  }
+}
+
+/* OLD DEBUGGING STUFF
 void keyPressed() {
 
   if (Debug) {
@@ -214,5 +248,13 @@ void DebugMode(boolean theFlag) {
     Debug = false;
     println("DEBUG TOGGLE OFF.");
   }
+}
+END OLD DEBUGGING STUFF */
+
+
+void exit () {
+  output.flush(); // Writes the remaining data to the file
+  output.close(); // Finishes the file
+  midiBus.close(); //closes midi connections
 }
 
