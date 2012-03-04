@@ -54,11 +54,11 @@ color lowColor = COLOR_RED;
 String dataIn; //string for data from thinkgear driver
 
 
-Boolean Debug = true;
+Boolean debug = true;
 
 
-int HIGH_THRESH = 96;
-int LOW_THRESH = 4;
+int HIGH_THRESH = 93;
+int LOW_THRESH = 20;
 boolean LOW = false;
 boolean HIGH = true;
 boolean lastSwitch = false;
@@ -68,7 +68,10 @@ int time1, time2, loopCounter;
 void setup() {
   
   String outputFileName = "output_" + month() +"_"+ day() +"_"+ year() +"_"+ hour()+minute() +".txt";
-  output = createWriter(outputFileName); 
+  output = createWriter(outputFileName);
+  if (debug) output.println("printWriter online.");
+  output.println(outputFileName);
+  
   
   size(300, 100);
   fps = 60;
@@ -93,7 +96,7 @@ void draw() {
   time2 = millis() - time1;
   time1 = millis();
 
-  if (Debug) {
+  if (debug) {
     //should print on each iteration of loop regardless of dataIn
     println("loop time: " + time2 + "  loop number " + loopCounter);
   }
@@ -102,20 +105,20 @@ void draw() {
 
     dataIn = myBrainwave.readString();
 
-    if (Debug) {
+    if (debug) {
       //made it to dataIn
       println(dataIn);
 
       try {
         //parse JSON object from dataIn string
         JSONObject nytData = new JSONObject(dataIn);
-
         //parse individual datasets from main JSON object
         JSONObject results = nytData.getJSONObject("eegPower"); //eegPower dataset
-
         JSONObject resultsM = nytData.getJSONObject("eSense"); //eSense dataset
-
+        
+        //parse rawEeg data, need to change drivers mode to enable this
         //JSONObject rawData = nytData.getJSONObject("rawEeg");
+        //parse blink data. also off by default.
         //JSONObject resultsB = nytData.getJSONObject("blinkStrength");
 
         //pull individual values from eSense and eegPower JSON objects
@@ -132,12 +135,13 @@ void draw() {
         int attention = resultsM.getInt("attention");
         int meditation = resultsM.getInt("meditation");
 
-        //newData = attention;
-        newData = (int) map(attention, 0, 70, 1, 99);
+        //map the point coming in based on high and low cutoffs
+        newData = constrain(attention, 0, 70); 
+        newData = (int) map(newData, 0, 70, 1, 99);
         println("data = " + data + " newData = " + newData);
       } 
       catch (JSONException e) {
-        if (Debug) {
+        if (debug) {
           println ("There was an error parsing the JSONObject.");
           println(e);
         }
@@ -149,18 +153,20 @@ void draw() {
     data = newData;
     
     recalculatePoints(intPoints[i], data);
-    if (Debug) println("recalculated points");
+    if (debug) println("recalculated points");
     i = 0;
   } 
   else {
     //SEND MIDI CONTRTOL
     midiBus.sendControllerChange(0, 3, intPoints[i]);
-    if (Debug) println("sent midi control " + intPoints[i] + " i = " + i);
+    if (debug) println("sent midi control " + intPoints[i] + " i = " + i);
+    output.println("cursor:" + intPoints[i]);
     i++;
     if (i >= fps) { //make sure i doesnt go out of bounds for intPoints[] if no update in >1sec
       i = fps - 1;
     }
     //draw cursor and track thing
+    background(255);
     fill(0);
     rect(20, 40, 260, 5);
     int cursorPos = (int) map(intPoints[i], 1, 99, 22, 275);
@@ -172,7 +178,9 @@ void draw() {
       lastSwitch = LOW;
       //LOG THE SWITCH
       int lapTime = millis() - lastHit;
-      output.println("Low Hit:" + millis() +":"+ lapTime);
+      String outputString = "Low Hit:" + millis() +":"+ lapTime;
+      println(outputString);
+      output.println(outputString);
       lastHit = millis();
     }
     else if (intPoints[i] >= HIGH_THRESH && lastSwitch == LOW) {
@@ -180,7 +188,9 @@ void draw() {
       lastSwitch = HIGH;
       //LOG THE SWITCH
       int lapTime = millis() - lastHit;
-      output.println("High Hit:" + millis() +":"+ lapTime);
+      String outputString = "High Hit:" + millis() +":"+ lapTime;
+      println(outputString);
+      output.println(outputString);
       lastHit = millis();
     }
 
@@ -213,10 +223,16 @@ void switchColors() {
   }
 }
 
+void keyPressed() {
+  if (key == 'x') {
+    stop();
+  }   
+}
+
 /* OLD DEBUGGING STUFF
 void keyPressed() {
 
-  if (Debug) {
+  if (debug) {
     if (key == 'q') {
       print("___---====Json + Raw OFF====---___");
       myBrainwave.write("{\"enableRawOutput\": false, \"format\": \"Json\"}");
@@ -239,22 +255,23 @@ void keyPressed() {
   }
 }
 
-void DebugMode(boolean theFlag) {
+void debugMode(boolean theFlag) {
   if (theFlag==true) {
-    Debug = true;
+    debug = true;
     println("DEBUG TOGGLE ON.");
   } 
   else {
-    Debug = false;
+    debug = false;
     println("DEBUG TOGGLE OFF.");
   }
 }
 END OLD DEBUGGING STUFF */
 
 
-void exit () {
+void stop () {
   output.flush(); // Writes the remaining data to the file
   output.close(); // Finishes the file
   midiBus.close(); //closes midi connections
+  exit();
 }
 
