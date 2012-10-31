@@ -30,6 +30,7 @@
  |  |
  | MIDIBus library: http://smallbutdigital.com/themidibus.php|
  | LoopBe internal MIDI port: http://nerds.de/en/loopbe1.html |
+ | OSX alternative to LoopBe -- ipMIDI (Not Yet Tested!): http://nerds.de/en/ipmidi_osx.html
  +------------------------------------------------------------------------------------+
  */
 
@@ -111,10 +112,10 @@ void draw() {
 
       try {
         //parse JSON object from dataIn string
-        JSONObject nytData = new JSONObject(dataIn);
+        JSONObject headsetData = new JSONObject(dataIn);
         //parse individual datasets from main JSON object
-        JSONObject results = nytData.getJSONObject("eegPower"); //eegPower dataset
-        JSONObject resultsM = nytData.getJSONObject("eSense"); //eSense dataset
+        JSONObject results = headsetData.getJSONObject("eegPower"); //eegPower dataset
+        JSONObject resultsM = headsetData.getJSONObject("eSense"); //eSense dataset
         
         //parse rawEeg data, need to change drivers mode to enable this
         //JSONObject rawData = nytData.getJSONObject("rawEeg");
