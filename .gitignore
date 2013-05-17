@@ -1,0 +1,6 @@
+applet/
+application.macosx/
+application.windows/
+data.zip
+data/
+output*.txt
