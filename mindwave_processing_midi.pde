@@ -109,46 +109,47 @@ void draw() {
     if (debug) {
       //made it to dataIn
       println(dataIn);
+    }
+    
+    try {
+      //parse JSON object from dataIn string
+      JSONObject headsetData = new JSONObject(dataIn);
+      //parse individual datasets from main JSON object
+      JSONObject results = headsetData.getJSONObject("eegPower"); //eegPower dataset
+      JSONObject resultsM = headsetData.getJSONObject("eSense"); //eSense dataset
+      
+      //parse rawEeg data, need to change drivers mode to enable this
+      //JSONObject rawData = nytData.getJSONObject("rawEeg");
+      //parse blink data. also off by default.
+      //JSONObject resultsB = nytData.getJSONObject("blinkStrength");
 
-      try {
-        //parse JSON object from dataIn string
-        JSONObject headsetData = new JSONObject(dataIn);
-        //parse individual datasets from main JSON object
-        JSONObject results = headsetData.getJSONObject("eegPower"); //eegPower dataset
-        JSONObject resultsM = headsetData.getJSONObject("eSense"); //eSense dataset
-        
-        //parse rawEeg data, need to change drivers mode to enable this
-        //JSONObject rawData = nytData.getJSONObject("rawEeg");
-        //parse blink data. also off by default.
-        //JSONObject resultsB = nytData.getJSONObject("blinkStrength");
+      //pull individual values from eSense and eegPower JSON objects
+      //this is the eegPower stuff
+      // int delta = results.getInt("delta");
+      // int theta = results.getInt("theta");
+      // int lowAlpha = results.getInt("lowAlpha");
+      // int highAlpha = results.getInt("highAlpha");
+      // int lowBeta = results.getInt("lowBeta");
+      // int highBeta = results.getInt("highBeta");
+      // int lowGamma = results.getInt("lowGamma");
+      // int highGamma = results.getInt("highGamma");
+      //this is the eSense stuff
+      int attention = resultsM.getInt("attention");
+      // int meditation = resultsM.getInt("meditation");
 
-        //pull individual values from eSense and eegPower JSON objects
-        //this is the eegPower stuff
-        int delta = results.getInt("delta");
-        int theta = results.getInt("theta");
-        int lowAlpha = results.getInt("lowAlpha");
-        int highAlpha = results.getInt("highAlpha");
-        int lowBeta = results.getInt("lowBeta");
-        int highBeta = results.getInt("highBeta");
-        int lowGamma = results.getInt("lowGamma");
-        int highGamma = results.getInt("highGamma");
-        //this is the eSense stuff
-        int attention = resultsM.getInt("attention");
-        int meditation = resultsM.getInt("meditation");
-
-        //map the point coming in based on high and low cutoffs
-        newData = constrain(attention, 0, 70); 
-        newData = (int) map(newData, 0, 70, 1, 99);
-        println("data = " + data + " newData = " + newData);
-      } 
-      catch (JSONException e) {
-        if (debug) {
-          println ("There was an error parsing the JSONObject.");
-          println(e);
-        }
+      //map the point coming in based on high and low cutoffs
+      newData = constrain(attention, 0, 70); 
+      newData = (int) map(newData, 0, 70, 1, 99);
+      println("data = " + data + " newData = " + newData);
+    } 
+    catch (JSONException e) {
+      if (debug) {
+        println ("There was an error parsing the JSONObject.");
+        println(e);
       }
     }
   }
+
   if (newData != data) { //check if we actually got new data
     //save new data and recalc interpolation points
     data = newData;
